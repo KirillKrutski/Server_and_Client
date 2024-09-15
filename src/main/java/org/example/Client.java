@@ -4,29 +4,34 @@ import java.io.*;
 import java.net.*;
 
 public class Client {
+
     public static void main(String[] args) {
-        String hostname = "localhost"; // address server
-        int port = 8080;
+        String hostname = "localhost";  // Адрес сервера
+        int port = 8080;  // Порт, на котором запущен сервер
 
         try (Socket socket = new Socket(hostname, port)) {
-            // Current send data to server
+            // Поток для отправки данных на сервер
             PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
-            BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+
+            // Поток для чтения данных с консоли
+            BufferedReader consoleInput = new BufferedReader(new InputStreamReader(System.in));
 
             String userInput;
-            System.out.println("Enter(send exit if u want): ");
+            System.out.println("Введите данные для отправки на сервер (для выхода введите 'exit'):");
 
-            //Reading data from console and send to server
-            while ((userInput = in.readLine()) != null) {
+            // Чтение данных из консоли и отправка на сервер
+            while ((userInput = consoleInput.readLine()) != null) {
+                out.println(userInput);  // Отправляем сообщение на сервер
+
+                // Завершаем соединение, если введено "exit"
                 if ("exit".equalsIgnoreCase(userInput)) {
                     break;
                 }
-                out.println(userInput);
             }
         } catch (UnknownHostException e) {
-            System.out.println("Error of connecting to " + hostname + ":" + port);
+            System.out.println("Не удается подключиться к серверу: " + e.getMessage());
         } catch (IOException e) {
-            System.out.println("Error: " + e.getMessage());
+            System.out.println("Ошибка ввода-вывода: " + e.getMessage());
         }
     }
 }
