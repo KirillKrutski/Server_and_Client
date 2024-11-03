@@ -4,34 +4,64 @@ import java.io.*;
 import java.net.*;
 
 public class Client {
+    private Socket socket;
+    private BufferedReader in;
+    private PrintWriter out;
 
-    public static void main(String[] args) {
-        String hostname = "localhost";  // Адрес сервера
-        int port = 8080;  // Порт, на котором запущен сервер
-
-        try (Socket socket = new Socket(hostname, port)) {
-            // Поток для отправки данных на сервер
-            PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
-
-            // Поток для чтения данных с консоли
-            BufferedReader consoleInput = new BufferedReader(new InputStreamReader(System.in));
-
-            String userInput;
-            System.out.println("Введите данные для отправки на сервер (для выхода введите 'exit'):");
-
-            // Чтение данных из консоли и отправка на сервер
-            while ((userInput = consoleInput.readLine()) != null) {
-                out.println(userInput);  // Отправляем сообщение на сервер
-
-                // Завершаем соединение, если введено "exit"
-                if ("exit".equalsIgnoreCase(userInput)) {
-                    break;
-                }
-            }
-        } catch (UnknownHostException e) {
-            System.out.println("Не удается подключиться к серверу: " + e.getMessage());
+    public Client(String serverAddress, int port) {
+        try {
+            socket = new Socket(serverAddress, port);
+            in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+            out = new PrintWriter(socket.getOutputStream(), true);
         } catch (IOException e) {
-            System.out.println("Ошибка ввода-вывода: " + e.getMessage());
+            System.out.println("Connection error: " + e.getMessage());
+        }
+    }
+
+    // Метод для отправки сообщений на сервер
+    public void sendMessage(String message) {
+        out.println("message:" + message);
+    }
+
+    // Метод для редактирования сообщения
+    public void editMessage(int messageId, String newText) {
+        out.println("edit:" + messageId + ":" + newText);
+    }
+
+    // Метод для удаления сообщения
+    public void deleteMessage(int messageId) {
+        out.println("delete:" + messageId);
+    }
+
+    // Метод для регистрации нового пользователя
+    public boolean register(String username, String password) {
+        out.println("register:" + username + ":" + password);
+        return waitForResponse("register_success");
+    }
+
+    // Метод для входа в систему
+    public boolean login(String username, String password) {
+        out.println("login:" + username + ":" + password);
+        return waitForResponse("login_success");
+    }
+
+    // Ожидание ответа от сервера
+    private boolean waitForResponse(String expectedResponse) {
+        try {
+            String response = in.readLine();
+            return expectedResponse.equals(response);
+        } catch (IOException e) {
+            System.out.println("Error reading response: " + e.getMessage());
+            return false;
+        }
+    }
+
+    // Метод для закрытия соединения с сервером
+    public void close() {
+        try {
+            socket.close();
+        } catch (IOException e) {
+            System.out.println("Error closing connection: " + e.getMessage());
         }
     }
 }
